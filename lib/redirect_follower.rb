@@ -27,9 +27,8 @@ class RedirectFollower
     end
 
     self.response = http.request_get(uri.request_uri, @headers)
-
     if response.kind_of?(Net::HTTPRedirection)
-      self.url = redirect_url
+      self.url = redirect_url(uri)
       self.redirect_limit -= 1
       resolve
     end
@@ -38,9 +37,11 @@ class RedirectFollower
     self
   end
 
-  def redirect_url
+  def redirect_url(uri)
     if response['location'].nil?
       response.body.match(/<a href=\"([^>]+)\">/i)[1]
+    elsif response['location'].start_with?("/")
+      uri.scheme + "://"+ uri.host + response['location'] + ":" + uri.port.to_s
     else
       response['location']
     end
